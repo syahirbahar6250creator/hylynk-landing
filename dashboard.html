@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hylynk — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #2d8c5e;
+      --green-light: #52b788;
+      --green-pale: #e8f5ee;
+      --dark: #1a1a1a;
+      --gray: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f6f8f7;
+      --white: #ffffff;
+      --sidebar-w: 240px;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+      transition: transform 0.3s;
+    }
+    .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo span { font-size: 22px; font-weight: 900; color: var(--dark); letter-spacing: -1px; }
+    .sidebar-logo span b { color: var(--green); }
+    .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .nav-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1px; padding: 8px 8px 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+      font-size: 14px; font-weight: 500; color: var(--gray); cursor: pointer; text-decoration: none;
+      transition: all 0.15s;
+    }
+    .nav-item:hover { background: var(--green-pale); color: var(--green); }
+    .nav-item.active { background: var(--green-pale); color: var(--green); font-weight: 700; }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-bottom { padding: 16px 12px; border-top: 1px solid var(--border); }
+    .user-pill { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--bg); }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--green), var(--green-light)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .user-info p { font-size: 12px; font-weight: 700; color: var(--dark); }
+    .user-info span { font-size: 11px; color: var(--gray); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* TOPBAR */
+    .topbar {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 40;
+    }
+    .topbar-left h1 { font-size: 18px; font-weight: 800; color: var(--dark); }
+    .topbar-left p { font-size: 12px; color: var(--gray); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .btn-preview { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--gray); background: var(--white); cursor: pointer; text-decoration: none; transition: all 0.15s; }
+    .btn-preview:hover { border-color: var(--green); color: var(--green); }
+    .btn-primary { display: flex; align-items: center; gap: 6px; padding: 8px 18px; background: var(--green); border: none; border-radius: 8px; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; transition: background 0.15s; }
+    .btn-primary:hover { background: #236b49; }
+    .hamburger { display: none; background: none; border: none; cursor: pointer; }
+
+    /* CONTENT */
+    .content { padding: 28px 32px; flex: 1; }
+
+    /* PROFILE CARD */
+    .profile-card {
+      background: var(--white); border-radius: 20px; border: 1px solid var(--border);
+      padding: 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 24px;
+      position: relative; overflow: hidden;
+    }
+    .profile-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 80px; background: linear-gradient(135deg, #2d6a4f, #52b788); }
+    .profile-avatar-wrap { position: relative; z-index: 1; margin-top: 16px; }
+    .profile-avatar {
+      width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--green), var(--green-light));
+      display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 28px;
+      border: 4px solid var(--white); box-shadow: 0 4px 16px rgba(0,0,0,0.12); cursor: pointer; position: relative;
+    }
+    .avatar-edit {
+      position: absolute; bottom: 0; right: 0; width: 24px; height: 24px; background: var(--green);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
+      border: 2px solid var(--white);
+    }
+    .profile-info { flex: 1; padding-top: 40px; }
+    .profile-name { font-size: 20px; font-weight: 900; color: var(--dark); }
+    .profile-handle { font-size: 14px; color: var(--gray); margin-bottom: 8px; }
+    .profile-url { display: inline-flex; align-items: center; gap: 6px; background: var(--green-pale); color: var(--green); font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; text-decoration: none; }
+    .profile-actions { display: flex; gap: 10px; margin-top: 12px; }
+    .btn-outline { padding: 7px 16px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--gray); background: var(--white); cursor: pointer; transition: all 0.15s; }
+    .btn-outline:hover { border-color: var(--green); color: var(--green); }
+    .profile-stats { display: flex; gap: 0; margin-top: 20px; }
+    .stat-item { flex: 1; text-align: center; padding: 12px; border-top: 1px solid var(--border); }
+    .stat-item:not(:last-child) { border-right: 1px solid var(--border); }
+    .stat-val { font-size: 20px; font-weight: 900; color: var(--dark); }
+    .stat-label { font-size: 11px; color: var(--gray); margin-top: 2px; }
+    .stat-trend { font-size: 10px; color: var(--green); font-weight: 600; }
+
+    /* GRID */
+    .dash-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+    @media (max-width: 1100px) { .dash-grid { grid-template-columns: 1fr; } }
+
+    /* LINKS SECTION */
+    .card { background: var(--white); border-radius: 20px; border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .card-title { font-size: 15px; font-weight: 800; color: var(--dark); }
+    .card-sub { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+    .link-list { display: flex; flex-direction: column; gap: 10px; }
+    .link-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      background: var(--bg); border-radius: 12px; border: 1px solid var(--border);
+      transition: all 0.15s; cursor: grab;
+    }
+    .link-item:hover { border-color: var(--green); box-shadow: 0 2px 8px rgba(45,140,94,0.08); }
+    .link-drag { color: #ccc; cursor: grab; flex-shrink: 0; }
+    .link-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .link-info { flex: 1; min-width: 0; }
+    .link-title { font-size: 13px; font-weight: 700; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .link-url { font-size: 11px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .link-clicks { font-size: 11px; font-weight: 600; color: var(--green); white-space: nowrap; }
+    .link-actions { display: flex; gap: 6px; align-items: center; }
+    .toggle { width: 36px; height: 20px; background: #e5e7eb; border-radius: 10px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+    .toggle.on { background: var(--green); }
+    .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+    .toggle.on::after { transform: translateX(16px); }
+    .icon-btn { width: 30px; height: 30px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 7px; color: var(--gray); transition: all 0.15s; }
+    .icon-btn:hover { background: var(--green-pale); color: var(--green); }
+
+    .add-link-btn {
+      width: 100%; padding: 12px; border: 2px dashed var(--border); border-radius: 12px;
+      background: transparent; font-size: 14px; font-weight: 600; color: var(--gray);
+      cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 10px;
+    }
+    .add-link-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-pale); }
+
+    /* THEME SECTION */
+    .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .theme-item {
+      border-radius: 12px; overflow: hidden; cursor: pointer; border: 2px solid transparent;
+      transition: all 0.15s; aspect-ratio: 3/4; position: relative;
+    }
+    .theme-item.selected { border-color: var(--green); box-shadow: 0 0 0 2px var(--green-pale); }
+    .theme-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .theme-preview { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; padding: 10px 8px; gap: 5px; }
+    .theme-avatar { width: 24px; height: 24px; border-radius: 50%; }
+    .theme-line { height: 6px; border-radius: 3px; width: 60%; }
+    .theme-line.sm { width: 40%; height: 5px; }
+    .theme-btn-row { width: 80%; height: 10px; border-radius: 5px; }
+    .theme-check { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; background: var(--green); border-radius: 50%; display: none; align-items: center; justify-content: center; }
+    .theme-item.selected .theme-check { display: flex; }
+    .theme-name { font-size: 10px; font-weight: 600; text-align: center; margin-top: 4px; color: var(--gray); }
+
+    /* FONT SECTION */
+    .font-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .font-item {
+      padding: 12px; border-radius: 10px; border: 1.5px solid var(--border);
+      cursor: pointer; transition: all 0.15s; text-align: center;
+    }
+    .font-item:hover { border-color: var(--green); }
+    .font-item.selected { border-color: var(--green); background: var(--green-pale); }
+    .font-sample { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 2px; }
+    .font-name { font-size: 10px; color: var(--gray); font-weight: 600; }
+
+    /* PHONE PREVIEW */
+    .phone-preview-wrap { position: sticky; top: 80px; }
+    .phone-preview {
+      width: 100%; max-width: 260px; margin: 0 auto;
+      background: #fff; border-radius: 36px; border: 6px solid #1a1a1a;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden;
+      position: relative;
+    }
+    .phone-notch { background: #1a1a1a; height: 24px; width: 100px; border-radius: 0 0 16px 16px; margin: 0 auto; }
+    .phone-screen { min-height: 480px; padding: 16px 14px 24px; }
+
+    /* ANALYTICS MINI */
+    .analytics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .analytics-mini { background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 16px; text-align: center; }
+    .analytics-mini-val { font-size: 22px; font-weight: 900; color: var(--dark); }
+    .analytics-mini-label { font-size: 11px; color: var(--gray); margin-top: 2px; }
+    .analytics-mini-trend { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 4px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 20px; padding: 28px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; transition: border 0.15s; }
+    .form-input:focus { border-color: var(--green); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel { flex: 1; padding: 11px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--gray); background: var(--white); cursor: pointer; }
+    .btn-save { flex: 1; padding: 11px; background: var(--green); border: none; border-radius: 10px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; }
+    .btn-save:hover { background: #236b49; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 28px; right: 28px; background: var(--dark); color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* MOBILE */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .hamburger { display: block; }
+      .content { padding: 20px 16px; }
+      .analytics-row { grid-template-columns: repeat(3, 1fr); }
+      .topbar { padding: 0 16px; }
+      .profile-card { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span>hylynk</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <a href="#" class="nav-item active" onclick="setPage('home',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Home
+    </a>
+    <a href="#" class="nav-item" onclick="setPage('links',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      My Links
+    </a>
+    <a href="#" class="nav-item" onclick="setPage('analytics',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Analytics
+    </a>
+    <a href="#" class="nav-item" onclick="setPage('appearance',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+      Appearance
+    </a>
+    <div class="nav-label" style="margin-top:8px">Store</div>
+    <a href="#" class="nav-item" onclick="setPage('products',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      Digital Products
+    </a>
+    <a href="#" class="nav-item" onclick="setPage('wallet',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+      Wallet
+    </a>
+    <div class="nav-label" style="margin-top:8px">Settings</div>
+    <a href="#" class="nav-item" onclick="setPage('settings',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Settings
+    </a>
+    <a href="/index.html" class="nav-item" style="margin-top:4px">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Sign Out
+    </a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-pill">
+      <div class="user-avatar">S</div>
+      <div class="user-info">
+        <p>Syahir</p>
+        <span>@syahir.hy</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- OVERLAY for mobile sidebar -->
+<div id="sidebarOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:49" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <svg width="22" height="22" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="19" y2="6"/><line x1="3" y1="12" x2="19" y2="12"/><line x1="3" y1="18" x2="19" y2="18"/></svg>
+      </button>
+      <div class="topbar-left">
+        <h1 id="pageTitle">Home</h1>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <a href="#" class="btn-preview" onclick="openPreview()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        Preview
+      </a>
+      <button class="btn-primary" onclick="showToast('Changes saved!')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        Save
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="mainContent">
+
+    <!-- HOME PAGE -->
+    <div id="page-home">
+
+      <!-- ANALYTICS ROW -->
+      <div class="analytics-row">
+        <div class="analytics-mini">
+          <div class="analytics-mini-val">1,284</div>
+          <div class="analytics-mini-label">Profile Views</div>
+          <div class="analytics-mini-trend">↑ 12% this week</div>
+        </div>
+        <div class="analytics-mini">
+          <div class="analytics-mini-val">487</div>
+          <div class="analytics-mini-label">Total Clicks</div>
+          <div class="analytics-mini-trend">↑ 8% this week</div>
+        </div>
+        <div class="analytics-mini">
+          <div class="analytics-mini-val">38%</div>
+          <div class="analytics-mini-label">Click Rate</div>
+          <div class="analytics-mini-trend">↑ 3% this week</div>
+        </div>
+      </div>
+
+      <!-- PROFILE CARD -->
+      <div class="profile-card">
+        <div style="position:relative;z-index:1;margin-top:40px">
+          <div class="profile-avatar" onclick="showToast('Upload photo coming soon!')">
+            S
+            <div class="avatar-edit">
+              <svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">Syahir Baharuddin</div>
+          <div class="profile-handle">@syahir.hy • Digital Creator 🇲🇾</div>
+          <a href="#" class="profile-url" onclick="showToast('Copied: hylynk.my/syahir.hy')">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            hylynk.my/syahir.hy
+          </a>
+          <div class="profile-actions">
+            <button class="btn-outline" onclick="openEditProfile()">Edit Profile</button>
+            <button class="btn-outline" onclick="showToast('Link copied!')">Share Link</button>
+          </div>
+        </div>
+        <div class="profile-stats" style="border-top:1px solid var(--border);width:100%;margin-top:20px">
+          <div class="stat-item">
+            <div class="stat-val">1,284</div>
+            <div class="stat-label">Views</div>
+            <div class="stat-trend">↑ 12%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">487</div>
+            <div class="stat-label">Clicks</div>
+            <div class="stat-trend">↑ 8%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">38%</div>
+            <div class="stat-label">CTR</div>
+            <div class="stat-trend">↑ 3%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">12</div>
+            <div class="stat-label">Links</div>
+            <div class="stat-trend">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div>
+          <!-- LINKS -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">My Links</div>
+                <div class="card-sub">Drag to reorder • Click toggle to show/hide</div>
+              </div>
+              <button class="btn-primary" onclick="openAddLink()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Add Link
+              </button>
+            </div>
+            <div class="link-list" id="linkList">
+              <div class="link-item">
+                <div class="link-drag">⠿</div>
+                <div class="link-icon" style="background:#e8f5ee">🛍️</div>
+                <div class="link-info">
+                  <div class="link-title">My Online Store</div>
+                  <div class="link-url">shopee.com.my/syahir</div>
+                </div>
+                <div class="link-clicks">142 clicks</div>
+                <div class="link-actions">
+                  <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                  <button class="icon-btn" onclick="openEditLink(this)">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                  </button>
+                  <button class="icon-btn" onclick="deleteLink(this)" style="color:#ef4444">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="link-item">
+                <div class="link-drag">⠿</div>
+                <div class="link-icon" style="background:#fce7f3">📸</div>
+                <div class="link-info">
+                  <div class="link-title">Instagram</div>
+                  <div class="link-url">instagram.com/syahir</div>
+                </div>
+                <div class="link-clicks">98 clicks</div>
+                <div class="link-actions">
+                  <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                  <button class="icon-btn" onclick="openEditLink(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                  <button class="icon-btn" onclick="deleteLink(this)" style="color:#ef4444"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                </div>
+              </div>
+              <div class="link-item">
+                <div class="link-drag">⠿</div>
+                <div class="link-icon" style="background:#f3e8ff">🎵</div>
+                <div class="link-info">
+                  <div class="link-title">TikTok</div>
+                  <div class="link-url">tiktok.com/@syahir</div>
+                </div>
+                <div class="link-clicks">76 clicks</div>
+                <div class="link-actions">
+                  <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                  <button class="icon-btn" onclick="openEditLink(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                  <button class="icon-btn" onclick="deleteLink(this)" style="color:#ef4444"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                </div>
+              </div>
+              <div class="link-item">
+                <div class="link-drag">⠿</div>
+                <div class="link-icon" style="background:#fef3c7">▶️</div>
+                <div class="link-info">
+                  <div class="link-title">YouTube</div>
+                  <div class="link-url">youtube.com/@syahir</div>
+                </div>
+                <div class="link-clicks">54 clicks</div>
+                <div class="link-actions">
+                  <div class="toggle" onclick="this.classList.toggle('on')"></div>
+                  <button class="icon-btn" onclick="openEditLink(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                  <button class="icon-btn" onclick="deleteLink(this)" style="color:#ef4444"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                </div>
+              </div>
+              <div class="link-item">
+                <div class="link-drag">⠿</div>
+                <div class="link-icon" style="background:#dcfce7">💬</div>
+                <div class="link-info">
+                  <div class="link-title">WhatsApp</div>
+                  <div class="link-url">wa.me/601112345678</div>
+                </div>
+                <div class="link-clicks">117 clicks</div>
+                <div class="link-actions">
+                  <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                  <button class="icon-btn" onclick="openEditLink(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                  <button class="icon-btn" onclick="deleteLink(this)" style="color:#ef4444"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                </div>
+              </div>
+            </div>
+            <button class="add-link-btn" onclick="openAddLink()">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              Add New Link
+            </button>
+          </div>
+
+          <!-- THEMES -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Themes</div>
+                <div class="card-sub">Choose how your page looks</div>
+              </div>
+            </div>
+            <div class="theme-grid">
+              <!-- Minimal White -->
+              <div>
+                <div class="theme-item selected" onclick="selectTheme(this)">
+                  <div class="theme-preview" style="background:#fff">
+                    <div class="theme-avatar" style="background:linear-gradient(135deg,#2d8c5e,#52b788)"></div>
+                    <div class="theme-line" style="background:#e5e7eb"></div>
+                    <div class="theme-line sm" style="background:#f3f4f6"></div>
+                    <div class="theme-btn-row" style="background:#2d8c5e"></div>
+                    <div class="theme-btn-row" style="background:#e5e7eb"></div>
+                    <div class="theme-btn-row" style="background:#e5e7eb"></div>
+                  </div>
+                  <div class="theme-check"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+                </div>
+                <div class="theme-name">Minimal</div>
+              </div>
+              <!-- Dark -->
+              <div>
+                <div class="theme-item" onclick="selectTheme(this)">
+                  <div class="theme-preview" style="background:#1a1a1a">
+                    <div class="theme-avatar" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)"></div>
+                    <div class="theme-line" style="background:#333"></div>
+                    <div class="theme-line sm" style="background:#2a2a2a"></div>
+                    <div class="theme-btn-row" style="background:#7c3aed"></div>
+                    <div class="theme-btn-row" style="background:#2a2a2a"></div>
+                    <div class="theme-btn-row" style="background:#2a2a2a"></div>
+                  </div>
+                  <div class="theme-check"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+                </div>
+                <div class="theme-name">Dark</div>
+              </div>
+              <!-- Forest -->
+              <div>
+                <div class="theme-item" onclick="selectTheme(this)">
+                  <div class="theme-preview" style="background:#1a3a2a">
+                    <div class="theme-avatar" style="background:linear-gradient(135deg,#2d8c5e,#b7e4c7)"></div>
+                    <div class="theme-line" style="background:#2d6a4f"></div>
+                    <div class="theme-line sm" style="background:#245c44"></div>
+                    <div class="theme-btn-row" style="background:#52b788"></div>
+                    <div class="theme-btn-row" style="background:#2d6a4f"></div>
+                    <div class="theme-btn-row" style="background:#2d6a4f"></div>
+                  </div>
+                  <div class="theme-check"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+                </div>
+                <div class="theme-name">Forest</div>
+              </div>
+              <!-- Gradient -->
+              <div>
+                <div class="theme-item" onclick="selectTheme(this)">
+                  <div class="theme-preview" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+                    <div class="theme-avatar" style="background:rgba(255,255,255,0.3)"></div>
+                    <div class="theme-line" style="background:rgba(255,255,255,0.3)"></div>
+                    <div class="theme-line sm" style="background:rgba(255,255,255,0.2)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.9)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.2)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.2)"></div>
+                  </div>
+                  <div class="theme-check"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+                </div>
+                <div class="theme-name">Gradient</div>
+              </div>
+              <!-- Sunset -->
+              <div>
+                <div class="theme-item" onclick="selectTheme(this)">
+                  <div class="theme-preview" style="background:linear-gradient(135deg,#f093fb,#f5576c)">
+                    <div class="theme-avatar" style="background:rgba(255,255,255,0.4)"></div>
+                    <div class="theme-line" style="background:rgba(255,255,255,0.4)"></div>
+                    <div class="theme-line sm" style="background:rgba(255,255,255,0.3)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.9)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.2)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.2)"></div>
+                  </div>
+                  <div class="theme-check"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+                </div>
+                <div class="theme-name">Sunset</div>
+              </div>
+              <!-- Ocean -->
+              <div>
+                <div class="theme-item" onclick="selectTheme(this)">
+                  <div class="theme-preview" style="background:linear-gradient(135deg,#1e3a5f,#4facfe)">
+                    <div class="theme-avatar" style="background:rgba(255,255,255,0.3)"></div>
+                    <div class="theme-line" style="background:rgba(255,255,255,0.3)"></div>
+                    <div class="theme-line sm" style="background:rgba(255,255,255,0.2)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.9)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.2)"></div>
+                    <div class="theme-btn-row" style="background:rgba(255,255,255,0.2)"></div>
+                  </div>
+                  <div class="theme-check"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+                </div>
+                <div class="theme-name">Ocean</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FONTS -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Font Style</div>
+                <div class="card-sub">Pick a font for your profile page</div>
+              </div>
+            </div>
+            <div class="font-grid">
+              <div class="font-item selected" onclick="selectFont(this,'Inter')">
+                <div class="font-sample" style="font-family:'Inter',sans-serif">Aa Bb</div>
+                <div class="font-name">Inter</div>
+              </div>
+              <div class="font-item" onclick="selectFont(this,'Poppins')">
+                <div class="font-sample" style="font-family:'Georgia',serif">Aa Bb</div>
+                <div class="font-name">Serif</div>
+              </div>
+              <div class="font-item" onclick="selectFont(this,'Mono')">
+                <div class="font-sample" style="font-family:'Courier New',monospace">Aa Bb</div>
+                <div class="font-name">Mono</div>
+              </div>
+              <div class="font-item" onclick="selectFont(this,'Rounded')">
+                <div class="font-sample" style="font-family:'Arial Rounded MT Bold','Arial',sans-serif">Aa Bb</div>
+                <div class="font-name">Rounded</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- PHONE PREVIEW -->
+        <div class="phone-preview-wrap">
+          <div class="card" style="margin-bottom:12px;padding:14px 16px">
+            <div class="card-title" style="font-size:13px;margin-bottom:4px">Live Preview</div>
+            <div class="card-sub">hylynk.my/syahir.hy</div>
+          </div>
+          <div class="phone-preview" id="phonePreview">
+            <div class="phone-notch"></div>
+            <div class="phone-screen" id="phoneScreen" style="background:#fff">
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:8px">
+                <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2d8c5e,#52b788);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:20px;margin-bottom:8px">S</div>
+                <p style="font-size:13px;font-weight:800;color:#1a1a1a">Syahir Baharuddin</p>
+                <p style="font-size:11px;color:#888;margin-bottom:4px">@syahir.hy</p>
+                <p style="font-size:10px;color:#aaa;margin-bottom:16px;text-align:center">Digital Creator 🇲🇾</p>
+                <div style="width:100%;display:flex;flex-direction:column;gap:8px" id="previewLinks">
+                  <div style="height:38px;background:#2d8c5e;border-radius:10px;display:flex;align-items:center;padding:0 12px;gap:8px"><span>🛍️</span><span style="font-size:12px;color:#fff;font-weight:600">My Online Store</span></div>
+                  <div style="height:38px;background:#f3f4f6;border-radius:10px;display:flex;align-items:center;padding:0 12px;gap:8px"><span>📸</span><span style="font-size:12px;color:#555;font-weight:500">Instagram</span></div>
+                  <div style="height:38px;background:#f3f4f6;border-radius:10px;display:flex;align-items:center;padding:0 12px;gap:8px"><span>🎵</span><span style="font-size:12px;color:#555;font-weight:500">TikTok</span></div>
+                  <div style="height:38px;background:#f3f4f6;border-radius:10px;display:flex;align-items:center;padding:0 12px;gap:8px"><span>💬</span><span style="font-size:12px;color:#555;font-weight:500">WhatsApp</span></div>
+                </div>
+                <div style="margin-top:20px;padding-top:14px;border-top:1px solid #f3f4f6;width:100%;display:flex;justify-content:space-around">
+                  <div style="text-align:center"><p style="font-size:13px;font-weight:800;color:#2d8c5e">1.2k</p><p style="font-size:9px;color:#aaa">Views</p></div>
+                  <div style="text-align:center"><p style="font-size:13px;font-weight:800;color:#2d8c5e">487</p><p style="font-size:9px;color:#aaa">Clicks</p></div>
+                  <div style="text-align:center"><p style="font-size:13px;font-weight:800;color:#2d8c5e">38%</p><p style="font-size:9px;color:#aaa">CTR</p></div>
+                </div>
+                <p style="font-size:9px;color:#ccc;margin-top:16px">create by hylynk</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLACEHOLDER PAGES -->
+    <div id="page-links" style="display:none">
+      <div class="card"><div class="card-title" style="margin-bottom:8px">My Links</div><div class="card-sub">Full link management — coming in Next.js build.</div></div>
+    </div>
+    <div id="page-analytics" style="display:none">
+      <div class="card"><div class="card-title" style="margin-bottom:8px">Analytics</div><div class="card-sub">Detailed analytics — coming in Next.js build.</div></div>
+    </div>
+    <div id="page-appearance" style="display:none">
+      <div class="card"><div class="card-title" style="margin-bottom:8px">Appearance</div><div class="card-sub">Theme & font settings — coming in Next.js build.</div></div>
+    </div>
+    <div id="page-products" style="display:none">
+      <div class="card"><div class="card-title" style="margin-bottom:8px">Digital Products</div><div class="card-sub">Sell e-books, presets, templates — coming in Next.js build.</div></div>
+    </div>
+    <div id="page-wallet" style="display:none">
+      <div class="card"><div class="card-title" style="margin-bottom:8px">Wallet</div><div class="card-sub">Earnings & payouts — coming in Next.js build.</div></div>
+    </div>
+    <div id="page-settings" style="display:none">
+      <div class="card"><div class="card-title" style="margin-bottom:8px">Settings</div><div class="card-sub">Account settings — coming in Next.js build.</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD/EDIT LINK MODAL -->
+<div class="modal-overlay" id="linkModal" onclick="closeModal('linkModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="linkModalTitle">Add New Link</div>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input type="text" class="form-input" id="linkTitle" placeholder="e.g. My Instagram" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL</label>
+      <input type="url" class="form-input" id="linkUrl" placeholder="https://..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Icon (emoji)</label>
+      <input type="text" class="form-input" id="linkIcon" placeholder="📸" maxlength="2" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('linkModal')">Cancel</button>
+      <button class="btn-save" onclick="saveLink()">Save Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="profileModal" onclick="closeModal('profileModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Edit Profile</div>
+    <div class="form-group">
+      <label class="form-label">Display Name</label>
+      <input type="text" class="form-input" id="editName" value="Syahir Baharuddin" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" class="form-input" id="editHandle" value="syahir.hy" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bio</label>
+      <input type="text" class="form-input" id="editBio" value="Digital Creator 🇲🇾" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('profileModal')">Cancel</button>
+      <button class="btn-save" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // PAGE NAVIGATION
+  function setPage(name, el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('[id^="page-"]').forEach(p => p.style.display = 'none');
+    document.getElementById('page-' + name).style.display = '';
+    document.getElementById('pageTitle').textContent = el.textContent.trim();
+    closeSidebar();
+  }
+
+  // SIDEBAR MOBILE
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').style.display =
+      document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').style.display = 'none';
+  }
+
+  // MODALS
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function openAddLink() {
+    document.getElementById('linkModalTitle').textContent = 'Add New Link';
+    document.getElementById('linkTitle').value = '';
+    document.getElementById('linkUrl').value = '';
+    document.getElementById('linkIcon').value = '';
+    openModal('linkModal');
+  }
+  function openEditLink(btn) {
+    const item = btn.closest('.link-item');
+    document.getElementById('linkModalTitle').textContent = 'Edit Link';
+    document.getElementById('linkTitle').value = item.querySelector('.link-title').textContent;
+    document.getElementById('linkUrl').value = item.querySelector('.link-url').textContent;
+    document.getElementById('linkIcon').value = item.querySelector('.link-icon').textContent.trim();
+    openModal('linkModal');
+  }
+  function saveLink() {
+    const title = document.getElementById('linkTitle').value.trim();
+    const url = document.getElementById('linkUrl').value.trim();
+    const icon = document.getElementById('linkIcon').value.trim() || '🔗';
+    if (!title || !url) { showToast('Please fill in title and URL'); return; }
+    const item = document.createElement('div');
+    item.className = 'link-item';
+    item.innerHTML = `
+      <div class="link-drag">⠿</div>
+      <div class="link-icon" style="background:#f3f4f6">${icon}</div>
+      <div class="link-info"><div class="link-title">${title}</div><div class="link-url">${url}</div></div>
+      <div class="link-clicks">0 clicks</div>
+      <div class="link-actions">
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        <button class="icon-btn" onclick="openEditLink(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+        <button class="icon-btn" onclick="deleteLink(this)" style="color:#ef4444"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+      </div>`;
+    document.getElementById('linkList').appendChild(item);
+    closeModal('linkModal');
+    showToast('Link added!');
+    updatePreview();
+  }
+  function deleteLink(btn) {
+    btn.closest('.link-item').remove();
+    showToast('Link removed');
+    updatePreview();
+  }
+
+  function openEditProfile() { openModal('profileModal'); }
+  function saveProfile() {
+    const name = document.getElementById('editName').value.trim();
+    const handle = document.getElementById('editHandle').value.trim();
+    const bio = document.getElementById('editBio').value.trim();
+    document.querySelector('.profile-name').textContent = name;
+    document.querySelector('.profile-handle').textContent = '@' + handle + ' • ' + bio;
+    closeModal('profileModal');
+    showToast('Profile updated!');
+  }
+
+  // THEME SELECT
+  function selectTheme(el) {
+    document.querySelectorAll('.theme-item').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    const bg = el.querySelector('.theme-preview').style.background;
+    document.getElementById('phoneScreen').style.background = bg.includes('gradient') ? bg : (bg || '#fff');
+    showToast('Theme applied!');
+  }
+
+  // FONT SELECT
+  function selectFont(el, font) {
+    document.querySelectorAll('.font-item').forEach(f => f.classList.remove('selected'));
+    el.classList.add('selected');
+    showToast('Font changed to ' + font);
+  }
+
+  // PREVIEW UPDATE
+  function updatePreview() {
+    const links = document.querySelectorAll('#linkList .link-item');
+    const previewLinks = document.getElementById('previewLinks');
+    previewLinks.innerHTML = '';
+    links.forEach(link => {
+      const title = link.querySelector('.link-title').textContent;
+      const icon = link.querySelector('.link-icon').textContent.trim();
+      const isOn = link.querySelector('.toggle').classList.contains('on');
+      if (isOn) {
+        const div = document.createElement('div');
+        div.style.cssText = 'height:38px;background:#f3f4f6;border-radius:10px;display:flex;align-items:center;padding:0 12px;gap:8px';
+        div.innerHTML = `<span>${icon}</span><span style="font-size:12px;color:#555;font-weight:500">${title}</span>`;
+        previewLinks.appendChild(div);
+      }
+    });
+  }
+
+  function openPreview() {
+    window.open('https://syahirbahar6250creator.github.io/hylynk-landing/', '_blank');
+  }
+
+  // TOAST
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Toggle listeners update preview
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('toggle')) {
+      setTimeout(updatePreview, 100);
+    }
+  });
+</script>
+</body>
+</html>
